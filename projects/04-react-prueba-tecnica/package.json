@@ -14,9 +14,15 @@
     "vite": "^6.2.1"
   },
   "dependencies": {
-    "@vitejs/plugin-react": "3.0.1",
+    "@vanilla-extract/vite-plugin": "5.0.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "happy-dom": "17.4.3",
+    "openai": "4.86.2",
+    "path-to-regexp": "6.3.0",
+    "postcss": "8.5.3",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "vitest": "3.0.8"
   },
   "eslintConfig": {
     "extends": "./node_modules/standard/eslintrc.json"
