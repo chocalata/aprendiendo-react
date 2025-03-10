@@ -1,82 +1,111 @@
 import { useState } from 'react'
 import confetti from 'canvas-confetti'
 
-import { Square } from './components/Square.jsx'
 import { TURNS } from './constants.js'
 import { checkWinnerFrom, checkEndGame } from './logic/board.js'
-import { WinnerModal } from './components/WinnerModal.jsx'
-import { saveGameToStorage, resetGameStorage } from './logic/storage/index.js'
 
-function App () {
+import { Square } from './components/Square.jsx' 
+import { WinnerModal } from './components/WinnerModal.jsx'
+
+function App() {
+  // NO HACER ESTO YA QUE SE EJECUTA EN CADA RENDER Y ES LENTO. 
+  // const savedBoard = window.localStorage.getItem('board')
+
   const [board, setBoard] = useState(() => {
-    const boardFromStorage = window.localStorage.getItem('board')
-    if (boardFromStorage) return JSON.parse(boardFromStorage)
-    return Array(9).fill(null)
+    const savedBoard = window.localStorage.getItem('board')
+
+    return savedBoard ? JSON.parse(savedBoard) : Array(9).fill(null)
   })
 
   const [turn, setTurn] = useState(() => {
-    const turnFromStorage = window.localStorage.getItem('turn')
-    return turnFromStorage ?? TURNS.X
+    const savedTurn = window.localStorage.getItem('turn')
+
+    return savedTurn ?? TURNS.X
   })
 
-  // null es que no hay ganador, false es que hay un empate
-  const [winner, setWinner] = useState(null)
+  const [winner, setWinner] = useState(() => {
+    const savedWinner = window.localStorage.getItem('winner')
 
+    if (savedWinner) {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.8 },
+      })
+      return savedWinner
+    } 
+    return null
+  })
+  
   const resetGame = () => {
     setBoard(Array(9).fill(null))
+  
     setTurn(TURNS.X)
     setWinner(null)
 
-    resetGameStorage()
+    window.localStorage.removeItem('board')
+    window.localStorage.removeItem('turn')
+    window.localStorage.removeItem('winner')
   }
 
   const updateBoard = (index) => {
-    // no actualizamos esta posición
-    // si ya tiene algo
+    // NO SE MODIFICAN NUNCA LAS PROPS DE UN ESTADO
+    // POR NO TENER PROBLEMAS CON EL RENDERIZADO
+
+    // si la casilla ya tiene un valor, no se puede modificar
     if (board[index] || winner) return
-    // actualizar el tablero
+
+    // actualizar tablero
     const newBoard = [...board]
     newBoard[index] = turn
     setBoard(newBoard)
-    // cambiar el turno
+
+    // comprobar si hay un ganador
+    const newWinner = checkWinnerFrom(newBoard)
+
+    if (newWinner) {
+      setWinner(newWinner) //Los renderizados en react son asincronos
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.8 },
+      })
+
+      window.localStorage.setItem('winner', newWinner)
+
+    } else if (checkEndGame(newBoard)) {
+      setWinner(false) 
+    }
+
+    // cambiar de turno
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X
     setTurn(newTurn)
-    // guardar aqui partida
-    saveGameToStorage({
-      board: newBoard,
-      turn: newTurn
-    })
-    // revisar si hay ganador
-    const newWinner = checkWinnerFrom(newBoard)
-    if (newWinner) {
-      confetti()
-      setWinner(newWinner)
-    } else if (checkEndGame(newBoard)) {
-      setWinner(false) // empate
-    }
+    
+    window.localStorage.setItem('board', JSON.stringify(newBoard))
+    window.localStorage.setItem('turn', newTurn)
   }
-
+ 
   return (
-    <main className='board'>
-      <h1 translate="no">Tic tac toe</h1>
-      <button onClick={resetGame}>Reset del juego</button>
-      <section className='game'>
+    <main className="board">
+      <h1>Tic tac toe</h1>
+      <button onClick={resetGame}>Reiniciar</button>
+      <section className="game">
         {
           board.map((square, index) => {
-            return (
-              <Square
+            return ( 
+              <Square 
                 key={index}
                 index={index}
                 updateBoard={updateBoard}
               >
-                {square}
+                {square}  
               </Square>
             )
           })
+          
         }
       </section>
-
-      <section className='turn'>
+      <section className="turn">
         <Square isSelected={turn === TURNS.X}>
           {TURNS.X}
         </Square>
@@ -84,9 +113,11 @@ function App () {
           {TURNS.O}
         </Square>
       </section>
-
+      
       <WinnerModal resetGame={resetGame} winner={winner} />
     </main>
+    
+
   )
 }
 
