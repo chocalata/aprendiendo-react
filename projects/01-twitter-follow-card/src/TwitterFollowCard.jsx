@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-export function TwitterFollowCard ({ children, userName, initialIsFollowing }) {
+export function TwitterFollowCard ({ children, userName, site, initialIsFollowing }) {
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing)
 
   console.log('[TwitterFollowCard] render with userName: ', userName)
@@ -14,13 +14,18 @@ export function TwitterFollowCard ({ children, userName, initialIsFollowing }) {
     setIsFollowing(!isFollowing)
   }
 
+  const avatarSite = site ? `${site}/` : ''
+
+  const avatarLink = `https://unavatar.io/${avatarSite}${userName}`
+
+  console.log('avatarLink', avatarLink)
   return (
     <article className='tw-followCard'>
       <header className='tw-followCard-header'>
         <img
           className='tw-followCard-avatar'
           alt='El avatar de midudev'
-          src={`https://unavatar.io/${userName}`}
+          src={avatarLink}
         />
         <div className='tw-followCard-info'>
           <strong>{children}</strong>
