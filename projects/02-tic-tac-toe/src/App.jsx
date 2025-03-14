@@ -4,8 +4,10 @@ import confetti from 'canvas-confetti'
 import { TURNS } from './constants.js'
 import { checkWinnerFrom, checkEndGame } from './logic/board.js'
 
-import { Square } from './components/Square.jsx' 
+import { Square } from './components/Square.jsx'
 import { WinnerModal } from './components/WinnerModal.jsx'
+
+import { saveGameStorage, saveWinnerStorage, resetGameStorage } from './logic/storage/index.js'
 
 function App() {
   // NO HACER ESTO YA QUE SE EJECUTA EN CADA RENDER Y ES LENTO. 
@@ -33,19 +35,17 @@ function App() {
         origin: { y: 0.8 },
       })
       return savedWinner
-    } 
+    }
     return null
   })
-  
+
   const resetGame = () => {
     setBoard(Array(9).fill(null))
-  
+
     setTurn(TURNS.X)
     setWinner(null)
 
-    window.localStorage.removeItem('board')
-    window.localStorage.removeItem('turn')
-    window.localStorage.removeItem('winner')
+    resetGameStorage()
   }
 
   const updateBoard = (index) => {
@@ -71,20 +71,19 @@ function App() {
         origin: { y: 0.8 },
       })
 
-      window.localStorage.setItem('winner', newWinner)
+      saveWinnerStorage(newWinner)
 
     } else if (checkEndGame(newBoard)) {
-      setWinner(false) 
+      setWinner(false)
     }
 
     // cambiar de turno
     const newTurn = turn === TURNS.X ? TURNS.O : TURNS.X
     setTurn(newTurn)
-    
-    window.localStorage.setItem('board', JSON.stringify(newBoard))
-    window.localStorage.setItem('turn', newTurn)
+
+    saveGameStorage({ board: newBoard, turn: newTurn })
   }
- 
+
   return (
     <main className="board">
       <h1>Tic tac toe</h1>
@@ -92,17 +91,17 @@ function App() {
       <section className="game">
         {
           board.map((square, index) => {
-            return ( 
-              <Square 
+            return (
+              <Square
                 key={index}
                 index={index}
                 updateBoard={updateBoard}
               >
-                {square}  
+                {square}
               </Square>
             )
           })
-          
+
         }
       </section>
       <section className="turn">
@@ -113,10 +112,10 @@ function App() {
           {TURNS.O}
         </Square>
       </section>
-      
+
       <WinnerModal resetGame={resetGame} winner={winner} />
     </main>
-    
+
 
   )
 }
